@@ -13,6 +13,7 @@
     "typeRoots": ["node_modules/@types"],
     "types": [
       "angular",
+      "angular-route",
       "angular-ui-router",
       "angular-ui-bootstrap",
       "node"
