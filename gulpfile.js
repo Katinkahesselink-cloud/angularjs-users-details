@@ -26,6 +26,7 @@ var buffer = require("vinyl-buffer");
 var uglify = require("gulp-uglify");
 var gutil = require("gulp-util");
 var ngAnnotate = require("browserify-ngannotate");
+var tsify = require("tsify");
 var CacheBuster = require("gulp-cachebust");
 const livereload = require("gulp-livereload");
 const autoprefix = require("gulp-autoprefixer");
@@ -37,7 +38,7 @@ var cachebust = new CacheBuster();
 
 gulp.task("jshint", function(cb) {
   gulp
-    .src("./src/modules")
+    .src("./src/modules/**/*.js")
     .pipe(jshint(".jshintrc"))
     .pipe(jshint.reporter("jshint-stylish"));
   cb();
@@ -96,9 +97,10 @@ gulp.task("build-js", function(cb) {
   var b = browserify({
     entries: "./src/modules/app.module.js",
     debug: true,
-    paths: ["./src/modules/**/*.js"],
+    extensions: [".js", ".ts"],
+    paths: ["./src/modules"],
     transform: [ngAnnotate]
-  });
+  }).plugin(tsify);
 
   return b
     .bundle()
@@ -202,7 +204,7 @@ gulp.task(
   gulp.series("build", function(cb) {
 
     gulp.watch(
-      "./src/modules/**/*.js",
+      "./src/modules/**/*.{js,ts}",
       gulp.series(["clean-build-js", "jshint", "build-js", "code-cache-bust"])
     );
 
