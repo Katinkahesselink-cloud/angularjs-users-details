@@ -8,7 +8,7 @@
  * - CSS & JS Minification
  * - Cache Busting
  * - Live Reload
- * - JS Hint
+ * - ESLint
  * - Autoprefixer
  */
 
@@ -17,7 +17,7 @@ var webserver = require("gulp-webserver");
 var del = require("del");
 var rimraf = require("rimraf");
 var sass = require("gulp-sass");
-var jshint = require("gulp-jshint");
+var eslint = require("gulp-eslint-new");
 var babel = require("gulp-babel");
 var sourcemaps = require("gulp-sourcemaps");
 var browserify = require("browserify");
@@ -27,21 +27,22 @@ var uglify = require("gulp-uglify");
 var gutil = require("gulp-util");
 var ngAnnotate = require("browserify-ngannotate");
 var tsify = require("tsify");
+var concat = require("gulp-concat");
 var CacheBuster = require("gulp-cachebust");
 const livereload = require("gulp-livereload");
 const autoprefix = require("gulp-autoprefixer");
 var cachebust = new CacheBuster();
 
 /**
- * jshint task
+ * ESLint task
  */
 
-gulp.task("jshint", function(cb) {
-  gulp
-    .src("./src/modules/**/*.js")
-    .pipe(jshint(".jshintrc"))
-    .pipe(jshint.reporter("jshint-stylish"));
-  cb();
+gulp.task("lint", function() {
+  return gulp
+    .src(["./src/**/*.{ts,js}", "./gulpfile.js"])
+    .pipe(eslint())
+    .pipe(eslint.format())
+    .pipe(eslint.failAfterError());
 });
 
 /**
@@ -73,7 +74,7 @@ gulp.task("clean-build-template-cache", function(cb) {
  * Builds SCSS files
  */
 
-gulp.task("build-css", function(cb) {
+gulp.task("build-css", function() {
   return gulp
     .src("./src/assets/scss/**/*.scss")
     .pipe(sourcemaps.init())
@@ -93,9 +94,9 @@ gulp.task("build-css", function(cb) {
  * Build a minified Javascript bundle
  */
 
-gulp.task("build-js", function(cb) {
+gulp.task("build-js", function() {
   var b = browserify({
-    entries: "./src/modules/app.module.js",
+    entries: "./src/modules/app.module.ts",
     debug: true,
     extensions: [".js", ".ts"],
     paths: ["./src/modules"],
@@ -128,9 +129,8 @@ gulp.task("build-js", function(cb) {
  * Fills in the Angular template cache
  */
 
-gulp.task("build-template-cache", function(cb) {
+gulp.task("build-template-cache", function() {
   var ngHtml2Js = require("gulp-ng-html2js");
-  concat = require("gulp-concat");
 
   return gulp
     .src("./src/modules/**/*.view.html")
@@ -189,7 +189,7 @@ gulp.task(
     gulp.parallel(
       "build-css",
       "assets",
-      gulp.series("jshint", gulp.parallel("build-template-cache", "build-js"))
+      gulp.series("lint", gulp.parallel("build-template-cache", "build-js"))
     ),
     "code-cache-bust"
   )
@@ -205,14 +205,14 @@ gulp.task(
 
     gulp.watch(
       "./src/modules/**/*.{js,ts}",
-      gulp.series(["clean-build-js", "jshint", "build-js", "code-cache-bust"])
+      gulp.series(["clean-build-js", "lint", "build-js", "code-cache-bust"])
     );
 
     gulp.watch(
       "./src/modules/**/*.view.html",
       gulp.series([
         "clean-build-template-cache",
-        "jshint",
+        "lint",
         "build-template-cache",
         "code-cache-bust"
       ])
