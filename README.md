@@ -25,12 +25,6 @@ Run `npx gulp build` to build the project. The build artifacts will be stored in
 - For local development run `npx gulp dev`. This builds assets, watches `src/**`, and hosts `index.html` at http://localhost:8000.
 - For a one-off production bundle run `npx gulp build` and serve the generated `dist` directory with any static server (`npx http-server dist`, Azure Static Web Apps, etc.).
 
-### Toolchain notes
-
-- `node-sass` + Python 2.7 are no longer needed; we compile styles with dart-sass via gulp-sass v5.
-- The Sass sources still use `@import`. Dart-sass warns that it is deprecated but it continues to work; migrate to the `@use` syntax when convenient.
-- Keep using `npx gulp ...` instead of a globally installed CLI so scripts always pick up the workspace version.
-
 ## Specification
 
 > Imagine this is an MVP and additional features are already planned for the future. Try structuring the application in a way, that you can easily extend it when the time comes and reuse as much of the code you have already written for this MVP.

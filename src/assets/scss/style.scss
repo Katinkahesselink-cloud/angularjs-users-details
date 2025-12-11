@@ -1,4 +1,4 @@
 /** Modules **/
-@import "modules/admin";
-@import "modules/users";
-@import "modules/footer";
+@use "modules/admin" as *;
+@use "modules/users" as *;
+@use "modules/footer" as *;

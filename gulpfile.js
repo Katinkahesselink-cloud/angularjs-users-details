@@ -16,7 +16,7 @@ var gulp = require("gulp");
 var webserver = require("gulp-webserver");
 var del = require("del");
 var rimraf = require("rimraf");
-var sass = require("gulp-sass")(require("sass"));
+var sass = require("sass-embedded");
 var eslint = require("gulp-eslint-new");
 var babel = require("gulp-babel");
 var sourcemaps = require("gulp-sourcemaps");
@@ -31,7 +31,46 @@ var concat = require("gulp-concat");
 var CacheBuster = require("gulp-cachebust");
 const livereload = require("gulp-livereload");
 const autoprefix = require("gulp-autoprefixer");
+const through = require("through2");
+const path = require("path");
+const applySourceMap = require("vinyl-sourcemaps-apply");
 var cachebust = new CacheBuster();
+
+function compileSass(options) {
+  var sassOptions = options || {};
+
+  return through.obj(function(file, enc, cb) {
+    if (file.isNull()) {
+      cb(null, file);
+      return;
+    }
+
+    if (file.isStream()) {
+      cb(new gutil.PluginError("sass-embedded", "Streaming is not supported"));
+      return;
+    }
+
+    sass
+      .compileAsync(file.path, {
+        style: sassOptions.outputStyle || "compressed",
+        sourceMap: true
+      })
+      .then(function(result) {
+        file.contents = Buffer.from(result.css);
+        file.path = file.path.replace(/\.scss$/, ".css");
+
+        if (result.sourceMap) {
+          result.sourceMap.file = path.basename(file.path);
+          applySourceMap(file, result.sourceMap);
+        }
+
+        cb(null, file);
+      })
+      .catch(function(error) {
+        cb(new gutil.PluginError("sass-embedded", error));
+      });
+  });
+}
 
 /**
  * ESLint task
@@ -76,10 +115,10 @@ gulp.task("clean-build-template-cache", function(cb) {
 
 gulp.task("build-css", function() {
   return gulp
-    .src("./src/assets/scss/**/*.scss")
-    .pipe(sourcemaps.init())
+    .src("./src/assets/scss/style.scss")
+    .pipe(sourcemaps.init({ loadMaps: true }))
     .pipe(
-      sass({
+      compileSass({
         outputStyle: "compressed"
       })
     )
