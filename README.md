@@ -10,52 +10,26 @@ Run `npm install` to install required npm dependancies.
 
 ## Development server
 
-Run `gulp dev` for a dev server. Navigate to `http://localhost:8000/index.html`. The app will automatically reload if you change any of the source files.
+Run `npx gulp dev` for a dev server. Navigate to `http://localhost:8000/index.html`. The app will automatically reload if you change any of the source files.
 
 ## Build
 
-Run `gulp build` to build the project. The build artifacts will be stored in the `dist/` directory.
+Run `npx gulp build` to build the project. The build artifacts will be stored in the `dist/` directory.
 
 ## 2025 install instructions
 
-- Use Node 12.x (e.g., `nvm install/use 12.22.12`). The gulp build relies on node-sass bindings that don’t work on newer runtimes.
+- Use Node 20.19.4 (`nvm install 20.19.4` then `nvm use 20.19.4`). The toolchain now relies on dart-sass and modern TypeScript, so stick with an LTS runtime ≥ 18 (20.19.4 is our tested baseline).
+- If you previously forced Node 12 via `$env:PATH = "C:\Program Files\nodejs;" + ...`, remove that override so nvm’s Node 20 is first on `PATH`. A quick fix is `$env:PATH = ($env:PATH -replace "C:\\Program Files\\nodejs;?","") ; nvm use 20.19.4`. Verify with `node -v` (should read v20.19.4).
 - Install project dependencies from the repo root: `npm install`.
 - Pull front-end libraries listed in bower.json: `npx bower install`.
-- For local development run `npx gulp dev`. This builds assets, watches src/**, and hosts index.html at http://localhost:8000.
-- For a one-off production bundle run `npx gulp build` and serve the generated dist directory with any static server (npx http-server dist, Azure Static Web Apps, etc.).
+- For local development run `npx gulp dev`. This builds assets, watches `src/**`, and hosts `index.html` at http://localhost:8000.
+- For a one-off production bundle run `npx gulp build` and serve the generated `dist` directory with any static server (`npx http-server dist`, Azure Static Web Apps, etc.).
 
-If nvm install 12.22.12 keeps failing while downloading the bundled npm ZIP (the npm-v6.14.16.zip 404 we hit), do this instead:
+### Toolchain notes
 
-### Manual Node 12 install
-Download the MSI directly: https://nodejs.org/download/release/v12.22.12/node-v12.22.12-x64.msi.
-
-Run it (passive install is fine). This drops node.exe and npm into C:\Program Files\nodejs.
-
-In any shell where you’ll work on this project, prepend that path so Node 12 wins over your nvm node (`$env:PATH = "C:\Program Files\nodejs;" + $env:PATH`). Check with `node -v` (should show v12.22.12).
-
-Optional but handy: once Node 12 is in place, tell nvm to “use” it by editing %NVM_HOME%\settings.txt or simply running `nvm use 12.22.12` (nvm will just point to the MSI installation). That way you can still nvm use 20.19.4 later without touching PATH manually.
-
-If `nvm use 12.22.12` doesn't work, try:
-
-`$env:PATH = "C:\Program Files\nodejs;" + ($env:PATH -replace "C:\\nvm4w\\nodejs;?","")`
-
-*If necessary, use copilot to adapt these instructions for local use.*
-
-### Python 2.7 requirement
-
-`node-sass` still shells out to `node-gyp`, which requires Python 2.7 on Windows. If the Python installer didn’t add itself to `PATH`, do the following:
-
-1. Download and install Python 2.7.18 (64-bit) from [python.org](https://www.python.org/ftp/python/2.7.18/python-2.7.18.amd64.msi). Accept the defaults; this places Python under `C:\Python27`.
-2. Open **System Properties → Environment Variables**, edit your user `PATH`, and append `C:\Python27;C:\Python27\Scripts`. Alternatively, run the following in PowerShell:
-
-    ```powershell
-    [Environment]::SetEnvironmentVariable("Path", "$env:Path;C:\Python27;C:\Python27\Scripts", "User")
-    ```
-
-3. Verify the interpreter is reachable: `python -V` should print `Python 2.7.18`.
-4. Tell npm to always use this interpreter for native builds: `npm config set python "C:\Python27\python.exe"`.
-
-Once these steps are complete, `npm install` no longer fails during the `node-sass` postinstall phase.
+- `node-sass` + Python 2.7 are no longer needed; we compile styles with dart-sass via gulp-sass v5.
+- The Sass sources still use `@import`. Dart-sass warns that it is deprecated but it continues to work; migrate to the `@use` syntax when convenient.
+- Keep using `npx gulp ...` instead of a globally installed CLI so scripts always pick up the workspace version.
 
 ## Specification
 
